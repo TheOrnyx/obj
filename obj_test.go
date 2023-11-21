@@ -9,13 +9,13 @@ func TestOpenFile(t *testing.T) {
 	testCases := []struct {
 		name     string
 		filePath string
-		expected *Model
+		expected *Object
 		expectErr bool
 	}{
 		{
 			name:     "ValidFile",
 			filePath: "test.obj", // replace with the path to a valid .obj file for testing
-			expected: &Model{
+			expected: &Object{
 				Vertices:  []float32{1.0, 2.0, 3.0, 4.0, 5.0, 6.0},
 				TexCoords: []float32{0.1, 0.2, 0.3, 0.4},
 				Normals:   []float32{0.5, 0.6, 0.7, 0.8, 0.9, 1.0},

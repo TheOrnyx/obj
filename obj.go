@@ -7,15 +7,27 @@ import (
 	"strings"
 )
 
-type Model struct {
-	Vertices  []float32
-	TexCoords []float32
-	Normals   []float32
+//basic vector with x, y, z coords
+type Vertex struct {
+	X, Y, Z float32
+}
+
+//basic face containing vertex indexes
+type Face struct {
+	Vertices []int
+}
+
+//the object parsed from the obj
+type Object struct {
+	Vertices  []Vertex
+	Normals   []Vertex
+	TexCoords []Vertex
+	Faces []Face
 }
 
 // OpenFile open and parse a .obj file
-func OpenFile(path string) (*Model, error) {
-	newModel := new(Model)
+func OpenFile(path string) (*Object, error) {
+	newModel := new(Object)
 
 	file, err := os.Open(path)
 	if err != nil {
@@ -36,7 +48,7 @@ func OpenFile(path string) (*Model, error) {
 }
 
 // process a line
-func processLine(line string, m *Model) error {
+func processLine(line string, m *Object) error {
 	words := strings.Fields(line)
 	if len(words) < 1 {
 		return nil
@@ -56,7 +68,7 @@ func processLine(line string, m *Model) error {
 		if err != nil {
 			return err
 		}
-		m.Vertices = append(m.Vertices, float32(x), float32(y), float32(z))
+		m.Vertices = append(m.Vertices, Vertex{float32(x), float32(y), float32(z)})
 
 	case "vt": //maybe handle like missing ones or smth
 		u, err := strconv.ParseFloat(words[1], 32)
@@ -67,7 +79,7 @@ func processLine(line string, m *Model) error {
 		if err != nil {
 			return err
 		}
-		m.TexCoords = append(m.TexCoords, float32(u), float32(v))
+		m.TexCoords = append(m.TexCoords, Vertex{float32(u), float32(v), 0.0})
 
 	case "vn":
 		x, err := strconv.ParseFloat(words[1], 32)
@@ -82,7 +94,16 @@ func processLine(line string, m *Model) error {
 		if err != nil {
 			return err
 		}
-		m.Normals = append(m.Normals, float32(x), float32(y), float32(z))
+		m.Normals = append(m.Normals, Vertex{float32(x), float32(y), float32(z)})
+
+	case "f":
+		var face Face
+		for _, vertexStr := range words[1:] {
+			vertexIndices := strings.Split(vertexStr, "/")
+			vertexIndex, _ := strconv.Atoi(vertexIndices[0])
+			face.Vertices = append(face.Vertices, vertexIndex-1) // Obj indices are 1-based
+		}
+		m.Faces = append(m.Faces, face)
 	}
 
 	return nil
